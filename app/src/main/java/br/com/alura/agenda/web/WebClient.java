@@ -1,5 +1,7 @@
 package br.com.alura.agenda.web;
 
+import android.support.annotation.Nullable;
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.HttpURLConnection;
@@ -11,9 +13,23 @@ import java.util.Scanner;
  * Created by renan on 20/01/16.
  */
 public class WebClient {
+
+    public static final String URL_BASE_CAELUM = "https://www.caelum.com.br/mobile";
+    public static final String URL_BASE_SERVER = "http://172.24.34.38:8080/api/aluno";
+
     public String post(String json) {
+        return realizaConexao(json, URL_BASE_CAELUM);
+    }
+
+    public void insere(String json) {
+        realizaConexao(json, URL_BASE_SERVER);
+
+    }
+
+    @Nullable
+    private String realizaConexao(String json, String urlBaseCaelum) {
         try {
-            URL url = new URL("https://www.caelum.com.br/mobile");
+            URL url = new URL(urlBaseCaelum);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestProperty("Content-type", "application/json");
             connection.setRequestProperty("Accept", "application/json");
@@ -35,5 +51,4 @@ public class WebClient {
         }
         return null;
     }
-
 }
