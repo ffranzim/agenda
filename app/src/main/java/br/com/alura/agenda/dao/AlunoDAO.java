@@ -18,7 +18,7 @@ import br.com.alura.agenda.modelo.Aluno;
  */
 public class AlunoDAO extends SQLiteOpenHelper {
     public AlunoDAO(Context context) {
-        super(context, "Agenda", null, 4);
+        super(context, "Agenda", null, 11);
     }
 
     @Override
@@ -71,7 +71,7 @@ public class AlunoDAO extends SQLiteOpenHelper {
 
                 List<Aluno> alunos = populaAlunos(c);
                 for (Aluno a : alunos) {
-                    db.execSQL(atualizaIdAluno, new String[] { geraUUID(), a.getId()});
+                    db.execSQL(atualizaIdAluno, new String[]{geraUUID(), a.getId()});
                 }
                 // indo para versao 4
         }
@@ -81,7 +81,7 @@ public class AlunoDAO extends SQLiteOpenHelper {
         return UUID.randomUUID().toString();
     }
 
-    public void insereOrUpdate(Aluno aluno) {
+    public void insere(Aluno aluno) {
         SQLiteDatabase db = getWritableDatabase();
 
         if (aluno.getId() == null) {
@@ -89,8 +89,15 @@ public class AlunoDAO extends SQLiteOpenHelper {
         }
 
         ContentValues dados = pegaDadosDoAluno(aluno);
-
         db.insert("Alunos", null, dados);
+    }
+
+    public void update(Aluno aluno) {
+        SQLiteDatabase db = getWritableDatabase();
+
+        ContentValues dados = pegaDadosDoAluno(aluno);
+        db.update("Alunos", dados, "id = ?", new String[]{aluno.getId()});
+
     }
 
     @NonNull
@@ -160,9 +167,11 @@ public class AlunoDAO extends SQLiteOpenHelper {
     }
 
     public void insereOrUpdate(List<Aluno> alunos) {
-        for (Aluno a: alunos) {
-            if (!existe(a)){
-                insereOrUpdate(a);
+        for (Aluno a : alunos) {
+            if (!existe(a)) {
+                insere(a);
+            } else {
+                update(a);
             }
         }
     }
@@ -170,7 +179,7 @@ public class AlunoDAO extends SQLiteOpenHelper {
     private boolean existe(Aluno a) {
         String sql = "SELECT * FROM Alunos WHERE id=? LIMIT 1;";
         SQLiteDatabase db = getReadableDatabase();
-        Cursor c = db.rawQuery(sql, new String[] { a.getId() });
+        Cursor c = db.rawQuery(sql, new String[]{a.getId()});
         return (c.getCount() > 0);
     }
 }
