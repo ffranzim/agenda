@@ -18,6 +18,10 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
+
 import java.util.List;
 
 import br.com.alura.agenda.adapter.AlunosAdapter;
@@ -32,6 +36,7 @@ import retrofit2.Response;
 
 public class ListaAlunosActivity extends AppCompatActivity {
 
+    private static final String TAG = ListaAlunosActivity.class.getCanonicalName();
     private ListView listaAlunos;
     private SwipeRefreshLayout swipeListaAlunos;
 
@@ -73,6 +78,7 @@ public class ListaAlunosActivity extends AppCompatActivity {
 
         registerForContextMenu(listaAlunos);
         getAlunosServer();
+        getTokenFirebase();
     }
 
     private void carregaLista() {
@@ -94,6 +100,35 @@ public class ListaAlunosActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         carregaLista();
+
+    }
+
+    private void getTokenFirebase() {
+        FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener(ListaAlunosActivity.this,  new OnSuccessListener<InstanceIdResult>() {
+            @Override
+            public void onSuccess(InstanceIdResult instanceIdResult) {
+                String token = instanceIdResult.getToken();
+                Log.e("token",token);
+//                registerTokenServer(token);
+                registerTokenServer("c4T3EyrUVKQ:APA91bFnMvwpf_3a_hFvxHiroF6sH2qPmCNV6ikq8ABQSh8B8PJPpT33rQLCVK3VrgWqahAuUqOUQhgn4JL3uEnfh7KMB0VcTvMsb-cvE0la-oZGnreWVO-P0-axH9VxzehtOI9sgbzR");
+            }
+        });
+    }
+
+    private void registerTokenServer(final String token) {
+        Call<Void> call = new RetrofitInit().getDispositivoService().enviaToken(token);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                Log.i(TAG, "Token enviado com sucesso: " + token);
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e(TAG, "Falha ao enviar o token: " + t.getMessage());
+            }
+        });
+
     }
 
     private void getAlunosServer() {
