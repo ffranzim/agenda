@@ -22,11 +22,16 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import java.util.List;
 
 import br.com.alura.agenda.adapter.AlunosAdapter;
 import br.com.alura.agenda.dao.AlunoDAO;
 import br.com.alura.agenda.dto.AlunoSync;
+import br.com.alura.agenda.event.AtualizaListaAlunoEvent;
 import br.com.alura.agenda.modelo.Aluno;
 import br.com.alura.agenda.tasks.EnviaAlunosTask;
 import br.com.alura.agenda.web.RetrofitInit;
@@ -39,11 +44,15 @@ public class ListaAlunosActivity extends AppCompatActivity {
     private static final String TAG = ListaAlunosActivity.class.getCanonicalName();
     private ListView listaAlunos;
     private SwipeRefreshLayout swipeListaAlunos;
+    private EventBus eventBus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lista_alunos);
+
+
+        eventBus = EventBus.getDefault();
 
         listaAlunos = (ListView) findViewById(R.id.lista_alunos);
         swipeListaAlunos = (SwipeRefreshLayout) findViewById(R.id.swipe_lista_aluno);
@@ -81,6 +90,11 @@ public class ListaAlunosActivity extends AppCompatActivity {
         getTokenFirebase();
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void atualizaListAlunoEvent(AtualizaListaAlunoEvent atualizaListaAlunoEvent) {
+        carregaLista();
+    }
+
     private void carregaLista() {
         AlunoDAO dao = new AlunoDAO(this);
         List<Aluno> alunos = dao.buscaAlunos();
@@ -96,12 +110,20 @@ public class ListaAlunosActivity extends AppCompatActivity {
 
     }
 
+
     @Override
     protected void onResume() {
         super.onResume();
+        eventBus.register(this);
         carregaLista();
-
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        eventBus.unregister(this);
+    }
+
 
     private void getTokenFirebase() {
         FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener(ListaAlunosActivity.this,  new OnSuccessListener<InstanceIdResult>() {
